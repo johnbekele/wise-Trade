@@ -7,13 +7,9 @@ class UserService():
     def __init__(self):
         self.init="UserService initialized"
         self.test_repository = TestRepository()
-    
-    def get_user_service(self):
-        return self.init
-    
-    async def get_all_users(self)-> List[UserRead]:
-        return await self.test_repository.get_all_users()
-    
+    async def get_all_users(self) -> Optional[List[UserRead]]:
+        documents = await self.test_repository.get_all_users()
+        return documents
     async def create_user(self, user: UserCreate):
         # Map schema fields to model fields
         user_data = {

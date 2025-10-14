@@ -21,11 +21,11 @@ class User(Document):
     class Settings:
         name = "users"
 
-    class Config:
-        schema_extra = {
-            "example": {
-                "name": "John Doe",
-                "email": "john.doe@example.com",
-                "password": "password"
+        class Config:
+            schema_extra = {
+                "example": {
+                    "name": "John Doe",
+                    "email": "john.doe@example.com",
+                    "password": "password"
+                }
             }
-        }
