@@ -4,6 +4,8 @@ from app.core.database import init_database, close_db_connection
 from contextlib import asynccontextmanager
 
 
+#routers
+from app.routers import users
 
 
 @asynccontextmanager
@@ -20,4 +22,5 @@ app = FastAPI(lifespan=lifespan)
 
 
 app.include_router(test.router , tags=["test"] , prefix="/api/test")
+app.include_router(users.router , tags=["users"] , prefix="/api/users")
 

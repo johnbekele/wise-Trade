@@ -7,7 +7,14 @@ class UserCreate(BaseModel):
     first_name: str
     last_name: str
     email: EmailStr
-    password: str  # This will be hashed in the service layer
+    password: str 
+    is_active: bool = False
+    is_super_Admin: bool = False
+    is_verified: bool = False
+    created_at: datetime = datetime.now()
+    updated_at: datetime = datetime.now()
+    
+
 
 class UserRead(BaseModel):
     id: str
@@ -20,6 +27,7 @@ class UserRead(BaseModel):
     is_verified: bool
     created_at: datetime
     updated_at: datetime
+    message: Optional[str] = None
 
 class UserUpdate(BaseModel):
     username: Optional[str] = None

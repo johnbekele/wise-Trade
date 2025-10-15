@@ -18,8 +18,8 @@ class BaseRepository(Generic[DocumentType]):
     
      # FindALL
     
-    async def get_all(self)-> List[DocumentType]:
-        return await self.model.find().to_list()
+    async def get_all(self,skip:int =0 ,limit:int =100)-> List[DocumentType]:
+        return await self.model.find().skip(skip).limit(limit).to_list()
     
     async def get_by_id(self, id: str)-> Optional[DocumentType]:
         return await self.model.get(id)

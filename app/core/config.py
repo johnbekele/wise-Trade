@@ -19,6 +19,20 @@ class Config:
     SMTP_USER = os.getenv("SMTP_USER")
     SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
 
+    # Secret key
+    SECRET_KEY=os.getenv("SECRET_KEY")
+    REFRESH_SECRET_KEY=os.getenv("REFRESH_SECRET_KEY")
+    ALGORITHM=os.getenv("ALGORITHM")
+    ACCESS_TOKEN_EXPIRE_MINUTES=os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES")
+    REFRESH_TOKEN_EXPIRE_DAYS=os.getenv("REFRESH_TOKEN_EXPIRE_DAYS")
+    TOKEN_EXPIRE_DAYS=os.getenv("TOKEN_EXPIRE_DAYS")
+    TOKEN_EXPIRE_MINUTES=os.getenv("TOKEN_EXPIRE_MINUTES")
+
+
+    # Backend URL
+    FRONTEND_URL=os.getenv("FRONTEND_URL")
+    
+
 
 
 
