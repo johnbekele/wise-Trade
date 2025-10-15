@@ -39,9 +39,6 @@ class SecurityManager:
             )
 
         to_encode.update({"exp": int(expire.timestamp())})
-        print(f"to_encode: {to_encode}")
-        print(f"self.secret_key: {self.secret_key}")
-        print(f"self.algorithm: {self.algorithm}")
         encoded_jwt = jwt.encode(to_encode, self.secret_key, algorithm=self.algorithm)
         return encoded_jwt
 
@@ -57,9 +54,6 @@ class SecurityManager:
 
     def verify_token(self, token: str) -> Optional[str]:
         """Verify JWT token and return username"""
-        print(f"token: {token}")
-        print(f"self.secret_key: {self.secret_key}")
-        print(f"self.algorithm: {self.algorithm}")
         try:
             payload = jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
             username: Optional[str] = payload.get("sub")
@@ -105,24 +99,17 @@ class SecurityManager:
             return None
     def decode_token(self, token: str) -> Dict[str, Any]:
         """Decode JWT token and return payload"""
-        print(f"user_token_to_decode: {token}")
-        print(f"decoding_secret_key: {self.secret_key}")
-        print(f"decoding_algorithm: {self.algorithm}")
         try:
             payload = jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
-            print(f"payload: {payload}")
             return {"success": True, "payload": payload}
         except ExpiredSignatureError:
             message = "Token has expired"
-            print(f"message: {message}")
             return {"success": False, "message": message}
         except JWSError as e:
             message = f"JWT Error: {e}"
-            print(f"message: {message}")
             return {"success": False, "message": message}
         except Exception as e:
             message = f"JWT Error: {e}"
-            print(f"message: {message}")
             return {"success": False, "message": message}
 
     def refresh_access_token(self, refresh_token: str) -> str:

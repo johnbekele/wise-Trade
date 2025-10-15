@@ -21,4 +21,4 @@ async def create_user(user: UserCreate ,user_service: UserService = Depends(User
 
 @router.get("/config")
 def get_config():
-    return {"message": settings.MONGO_URI}
+    return {"message": "Configuration endpoint - credentials hidden for security"}
