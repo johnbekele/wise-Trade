@@ -6,7 +6,7 @@ from typing import Optional
 from app.repositories.users_repository import UsersRepository
 from app.services.email_service import EmailService
 from app.core.config import settings
-
+from app.schemas.user_schema import UserRead
 
 
 class AuthService:
@@ -74,7 +74,7 @@ class AuthService:
         payload_dict = payload.model_dump()
 
         access_token = await self.create_token("", payload_dict, "access")
-        refresh_token = await self.create_token("", payload_dict, "refresh")
+       
 
         return LoginResponse( token=access_token, token_type="bearer", user=payload)
 
@@ -134,7 +134,23 @@ class AuthService:
             import traceback
             traceback.print_exc()
             return f"Error verifying email: {str(e)}"
-      
+
+    async def find_by_token(self, token: str) -> Optional[UserRead]:
+        """Find user by JWT token"""
+        try:
+            print(f"Finding user by token: {token}")
+            user_id = self.security_manager.verify_token(token)
+            if user_id:
+                user = await self.users_repository.find_by_id(user_id)
+                if user:
+                    user_dict = user.to_dict_with_id()
+                    return UserRead(**user_dict, message="User found")
+            return None
+        except Exception as e:
+            print(f"Error in find_by_token: {e}")
+            import traceback
+            traceback.print_exc()
+            return None
  
 
 
