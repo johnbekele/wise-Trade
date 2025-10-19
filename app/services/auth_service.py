@@ -113,11 +113,16 @@ class AuthService:
                     # Verify the token and get the user_id
                     user_id = self.security_manager.verify_token(token)
                     if user_id:
-                        user = await self.users_repository.get_user_by_id(user_id)
-                        if user:
-                            user.is_verified = True
-
-                            await self.users_repository.update_user(user_id, user)
+                        # Get the user document directly from the model
+                        from app.models.users import User
+                        from beanie import PydanticObjectId
+                        
+                        user_doc = await User.find_one({"_id": PydanticObjectId(user_id)})
+                        if user_doc:
+                            # Update the user document directly
+                            user_doc.is_verified = True
+                            user_doc.is_active = True
+                            await user_doc.save()
                             return "Email verified successfully"
                         else:
                             return "User not found"

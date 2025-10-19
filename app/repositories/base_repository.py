@@ -39,12 +39,17 @@ class BaseRepository(Generic[DocumentType]):
         return await self.model.find_all().skip(skip).limit(limit).to_list()
     
     async def update(self, id: str, data: dict)-> Optional[DocumentType]:
-        document = await self.model.get(id)
-        if document:
-            for key, value in data.items():
-                setattr(document, key, value)
-            await document.save()
-        return document
+        try:
+            # Use find_one with PydanticObjectId for better compatibility
+            document = await self.model.find_one({"_id": PydanticObjectId(id)})
+            if document:
+                for key, value in data.items():
+                    setattr(document, key, value)
+                await document.save()
+            return document
+        except Exception as e:
+            print(f"Error in update method: {e}")
+            return None
     
     async def delete(self, id: str)-> Optional[DocumentType]:
         document = await self.model.get(id)
