@@ -1,4 +1,4 @@
-from fastapi import APIRouter , Depends
+from fastapi import APIRouter , Depends ,Query
 from app.services.auth_service import AuthService
 from app.schemas.auth_schema import LoginResponse, LoginRequest
 
@@ -18,3 +18,8 @@ async def login(login_request: LoginRequest, auth_service: AuthService = Depends
 @router.post("/resend-email-verification/{user_id}")
 async def send_email_verification(user_id, auth_service: AuthService = Depends(get_auth_service)) -> str:
     return await auth_service.send_email_verification(user_id)
+
+
+@router.get("/verify-email")
+async def verify_email(token: str = Query(...), auth_service: AuthService = Depends(get_auth_service)) -> str:
+    return await auth_service.verify_email(token)

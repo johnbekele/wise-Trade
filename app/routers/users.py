@@ -1,6 +1,6 @@
 from fastapi import APIRouter , Depends
 from app.services.users_service import UserService
-from app.schemas.user_schema import UserCreate, UserRead, UserUpdate
+from app.schemas.user_schema import UserCreate, UserRead, UserUpdate , UserDeleteResponse
 from typing import List
 
 
@@ -8,7 +8,7 @@ router = APIRouter()
 def get_user_service() -> UserService:
     return UserService()
 
-@router.post("/create-user", response_model=UserRead)
+@router.post("/signup", response_model=UserRead)
 async def create_user(
     user_data: UserCreate,
     user_service: UserService = Depends(get_user_service)
@@ -29,10 +29,10 @@ async def get_all_users(
 ) -> List[UserRead]:
     return await user_service.get_all_users()
 
-@router.delete("/{user_id}", response_model=UserRead)
+@router.delete("/{user_id}", response_model=UserDeleteResponse)
 async def delete_user(
     user_id: str,
     user_service: UserService = Depends(get_user_service)
-) -> UserRead:
+) -> UserDeleteResponse:
     return await user_service.delete_user(user_id)
 

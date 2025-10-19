@@ -21,13 +21,14 @@ class UserRead(BaseModel):
     username: str
     first_name: str
     last_name: str
+    hashed_password: str
     email: EmailStr
     is_active: bool
     is_super_Admin: bool
     is_verified: bool
     created_at: datetime
     updated_at: datetime
-    message: Optional[str] = None
+    
 
 class UserUpdate(BaseModel):
     username: Optional[str] = None
@@ -38,3 +39,7 @@ class UserUpdate(BaseModel):
     is_active: Optional[bool] = None
     is_super_Admin: Optional[bool] = None
     is_verified: Optional[bool] = None
+
+class UserDeleteResponse(BaseModel):
+    message: str
+    user_id: str

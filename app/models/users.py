@@ -1,7 +1,7 @@
 import asyncio
 from typing import Optional
 from pydantic import BaseModel, EmailStr, Field
-from beanie import Document, Indexed
+from beanie import Document, Indexed 
 from datetime import datetime
 from bson import ObjectId
 
@@ -39,3 +39,5 @@ class User(Document):
                     "password": "password"
                 }
             }
+
+    

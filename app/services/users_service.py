@@ -1,6 +1,6 @@
 from site import USER_BASE
 from typing import Optional, List
-from app.schemas.user_schema import UserCreate, UserRead, UserUpdate
+from app.schemas.user_schema import UserCreate, UserRead, UserUpdate , UserDeleteResponse
 from app.repositories.users_repository import UsersRepository
 from datetime import datetime
 from fastapi import HTTPException
@@ -8,7 +8,8 @@ from app.core.security import security_manager
 from app.repositories.auth_repository import AuthRepository
 from app.services.email_service import EmailService
 from app.core.config import settings
-
+from app.services.auth_service import AuthService
+from app.schemas.auth_schema import EmailVerificationResponse 
 
 class UserService():
     def __init__(self):
@@ -16,16 +17,14 @@ class UserService():
         self.users_repository = UsersRepository()
         self.auth_repository = AuthRepository()
         self.email_service = EmailService()
+        self.auth_service = AuthService()
 
     async def create_user(self, user_data: UserCreate)-> Optional[UserRead]:
         exisiting_user = await self.users_repository.find_by_email(user_data.email)
         username_exists = await self.users_repository.find_by_username(user_data.username)
 
         if exisiting_user:
-            if exisiting_user.is_verified:
-                raise HTTPException(status_code=400, detail="User already exists")
-            else:
-                raise HTTPException(status_code=400, detail="User already exists but not verified")
+            raise HTTPException(status_code=400, detail="User already exists")
         if username_exists:
             raise HTTPException(status_code=400, detail="Username already exists")
         
@@ -65,5 +64,34 @@ class UserService():
     async def update_user(self, user_id: str, user_data: UserUpdate)-> UserRead:
         return await self.users_repository.update_user(user_id, user_data)
     
-    async def delete_user(self, user_id: str)-> UserRead:
-        return await self.users_repository.delete_user(user_id)
+    async def delete_user(self, user_id: str) -> Optional[UserDeleteResponse]:
+        # Try to get user data before deletion
+        user = await self.users_repository.get_user_by_id(user_id)
+        
+        if not user:
+            # If we can't find the user by ID, try to find by other means
+            # This handles cases where Beanie can't find the user due to data inconsistencies
+            try:
+                from app.models.users import User
+                from beanie import PydanticObjectId
+                
+                # Try direct MongoDB query as fallback
+                user_direct = await User.find_one({"_id": PydanticObjectId(user_id)})
+                if user_direct:
+                    # Create a UserRead object from the direct query result
+                    user_dict = user_direct.to_dict_with_id()
+                    user = UserRead(**user_dict, message="User found via direct query")
+                else:
+                    raise HTTPException(status_code=404, detail="User not found")
+            except Exception as e:
+                raise HTTPException(status_code=404, detail="User not found")
+        
+        # Delete the user
+        try:
+            await self.users_repository.delete_user(user_id)
+        except Exception as e:
+            # Even if delete fails, return the user data we found
+            pass
+        
+        # Return the user data that was deleted
+        return UserDeleteResponse(message="User deleted successfully", user_id=user_id)

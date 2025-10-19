@@ -27,9 +27,10 @@ class EmailService:
         message["From"] = self.smtp_user
         message["To"] = to_email
         message["Subject"] = subject
+        
 
         print(
-            f"Connecting to SMTP server {self.smtp_host}:{self.smtp_port} as {self.smtp_user}"
+            f"Connecting to SMTP server {self.smtp_host}:{self.smtp_port} as {self.smtp_user} to send to {to_email}"
         )
 
         smtp = aiosmtplib.SMTP(

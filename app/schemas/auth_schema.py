@@ -45,3 +45,6 @@ class UserProfile(BaseModel):
     created_at: datetime
     updated_at: datetime
 
+
+class EmailVerificationResponse(BaseModel):
+    message: str

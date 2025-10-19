@@ -1,5 +1,5 @@
 from app.core.database import client
-from beanie import Document
+from beanie import Document ,PydanticObjectId
 from typing import Type , List, TypeVar, Generic, Optional , Dict,Any
 from pymongo.errors import DuplicateKeyError, OperationFailure
 
@@ -22,7 +22,15 @@ class BaseRepository(Generic[DocumentType]):
         return await self.model.find().skip(skip).limit(limit).to_list()
     
     async def get_by_id(self, id: str)-> Optional[DocumentType]:
-        return await self.model.get(id)
+        try:
+            # Try using find_one with ObjectId
+            document = await self.model.find_one({"_id": PydanticObjectId(id)})
+            if document:
+                return document
+            return None
+        except Exception as e:
+            print(f"Error in get_by_id: {e}")
+            return None
     
     async def find_one(self, query: dict)-> Optional[DocumentType]:
         return await self.model.find_one(query)
