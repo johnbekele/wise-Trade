@@ -76,7 +76,7 @@ class AuthService:
         access_token = await self.create_token("", payload_dict, "access")
         refresh_token = await self.create_token("", payload_dict, "refresh")
 
-        return LoginResponse(access_token=access_token, refresh_token=refresh_token, token_type="bearer", user=payload)
+        return LoginResponse( token=access_token, token_type="bearer", user=payload)
 
     async def send_email_verification(self, user_id: str)->str:
         try:
@@ -113,11 +113,8 @@ class AuthService:
                     # Verify the token and get the user_id
                     user_id = self.security_manager.verify_token(token)
                     if user_id:
-                        # Get the user document directly from the model
-                        from app.models.users import User
-                        from beanie import PydanticObjectId
-                        
-                        user_doc = await User.find_one({"_id": PydanticObjectId(user_id)})
+                        # Get the user document using the repository
+                        user_doc = await self.users_repository.find_by_id(user_id)
                         if user_doc:
                             # Update the user document directly
                             user_doc.is_verified = True

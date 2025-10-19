@@ -28,13 +28,17 @@ class UsersRepository(BaseRepository):
             return UserRead(**user_dict, message="User found")
         return None
     async def get_user_by_id(self,user_id:str)-> UserRead | None:
-        user= await self.get_by_id(user_id)
+        user= await self.find_by_id(user_id)
         if user:
             user_dict = user.to_dict_with_id()
             return UserRead(**user_dict, message="User found")
         return None
-    async def get_all_users(self,skip:int =0 ,limit:int =100)-> list[UserRead]:
-        users= await self.get_all(skip,limit)
+    
+    async def find_by_id(self, user_id: str) -> User | None:
+        """Find user by ID and return the document directly"""
+        return await super().find_by_id(user_id)
+    async def get_all_users(self, skip: int = 0, limit: int = 100) -> list[UserRead]:
+        users = await self.find_all(skip, limit)
         return [UserRead(**user.to_dict_with_id(), message="User found") for user in users]
     
     async def update_user(self, user_id: str, user_data: UserUpdate) -> UserRead:

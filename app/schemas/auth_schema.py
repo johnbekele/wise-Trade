@@ -19,8 +19,7 @@ class TokenPayload(BaseModel):
     
     
 class LoginResponse(BaseModel):
-    access_token: str
-    refresh_token: str
+    token: str
     token_type: Literal["bearer"]
     user: TokenPayload
     

@@ -1,6 +1,6 @@
 from site import USER_BASE
 from typing import Optional, List
-from app.schemas.user_schema import UserCreate, UserRead, UserUpdate , UserDeleteResponse
+from app.schemas.user_schema import UserCreate, UserRead, UserUpdate
 from app.repositories.users_repository import UsersRepository
 from datetime import datetime
 from fastapi import HTTPException
@@ -10,7 +10,7 @@ from app.services.email_service import EmailService
 from app.core.config import settings
 from app.services.auth_service import AuthService
 from app.schemas.auth_schema import EmailVerificationResponse 
-
+from beanie import PydanticObjectId
 class UserService():
     def __init__(self):
         self.init="UserService initialized"
@@ -64,7 +64,7 @@ class UserService():
     async def update_user(self, user_id: str, user_data: UserUpdate)-> UserRead:
         return await self.users_repository.update_user(user_id, user_data)
     
-    async def delete_user(self, user_id: str) -> Optional[UserDeleteResponse]:
+    async def delete_user(self, user_id: str) -> UserRead:
         # Try to get user data before deletion
         user = await self.users_repository.get_user_by_id(user_id)
         
@@ -94,4 +94,4 @@ class UserService():
             pass
         
         # Return the user data that was deleted
-        return UserDeleteResponse(message="User deleted successfully", user_id=user_id)
+        return user
