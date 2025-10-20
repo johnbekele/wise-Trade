@@ -135,12 +135,14 @@ class AuthService:
             traceback.print_exc()
             return f"Error verifying email: {str(e)}"
 
-    async def find_by_token(self, token: str) -> Optional[UserRead]:
+    async def find_by_token(self, token: str) :
         """Find user by JWT token"""
         try:
             print(f"Finding user by token: {token}")
-            user_id = self.security_manager.verify_token(token)
-            if user_id:
+            decoded_token = self.security_manager.decode_token(token)
+            if decoded_token["success"]:
+                payload = decoded_token["payload"]
+                user_id = payload["sub"]
                 user = await self.users_repository.find_by_id(user_id)
                 if user:
                     user_dict = user.to_dict_with_id()
@@ -151,7 +153,4 @@ class AuthService:
             import traceback
             traceback.print_exc()
             return None
- 
-
-
     
