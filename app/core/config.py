@@ -31,6 +31,11 @@ class Config:
 
     # Backend URL
     FRONTEND_URL=os.getenv("FRONTEND_URL")
+
+
+    # News API configuration
+    NEWS_API_KEY=os.getenv("NEWS_API_KEY")
+    NEWS_API_URL=os.getenv("NEWS_API_URL")
     
 
 
