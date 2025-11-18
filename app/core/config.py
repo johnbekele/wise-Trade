@@ -1,8 +1,11 @@
 import os
+import getpass
 from dotenv import load_dotenv
 import pymongo
 
 load_dotenv()
+
+
 
 class Config:
 
@@ -36,11 +39,15 @@ class Config:
     # News API configuration
     NEWS_API_KEY=os.getenv("NEWS_API_KEY")
     NEWS_API_URL=os.getenv("NEWS_API_URL")
+
+    # Alpha Vantage API configuration
+    ALPHA_VANTAGE_API_KEY=os.getenv("ALPHA_VANTAGE_API_KEY")
+    ALPHA_VANTAGE_API_URL=os.getenv("ALPHA_VANTAGE_API_URL", "https://www.alphavantage.co/query")
+
+    # AI API configuration
+    GEMINI_API_KEY=os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
+    GEMINI_MODEL=os.getenv("GEMINI_MODEL", "gemini-pro")
     
-
-
-
-
 
 
 
