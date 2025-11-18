@@ -14,13 +14,35 @@ email-validator>=2.2.0
 certifi>=2024.8.30
 
 # HTTP requests and user agents
-requests==2.32.4
 user-agents==2.2.0
 
 # Machine Learning dependencies
-google-generativeai==0.1.0rc1
+# Note: google-generativeai is provided by langchain-google-genai as a dependency
+# The code imports it directly, but we let langchain-google-genai manage the version
 pinecone-client==6.0.0
 numpy==1.26.4
 pandas==2.2.2
 scikit-learn==1.4.2
 joblib==1.4.2
+
+
+# AI API dependencies
+# Install langchain-google-genai first to establish compatible dependency versions
+langchain>=1.0.7
+langchain-core>=1.0.5
+langchain-google-genai>=3.0.3
+langgraph>=1.0.3
+
+# google-generativeai is needed for direct imports in code
+# Exclude old versions that conflict with langchain-google-genai's requirements
+# langchain-google-genai needs google-ai-generativelanguage>=0.7.0
+# Old versions (0.1.0, 0.1.0rc1, 0.2.0) use incompatible google-ai-generativelanguage versions
+# Using >=0.3.0 to get versions that use google-ai-generativelanguage>=0.7.0
+google-generativeai>=0.3.0,!=0.1.0,!=0.1.0rc1
+
+# HTTP requests
+requests>=2.32.5
+
+# Additional dependencies (auto-installed with above packages)
+pydantic>=2.7.4
+
