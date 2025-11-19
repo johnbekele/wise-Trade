@@ -113,7 +113,7 @@ print(df.head())
 ### ✅ Summary — Quick Blueprint
 
 | Step | Action                       | Endpoint               |
-| ---- | ---------------------------- | ---------------------- |
+| ---- | ---------------------------- | ---------------------- |``
 | 1    | Get current price            | `GLOBAL_QUOTE`         |
 | 2    | Fetch recent intraday data   | `TIME_SERIES_INTRADAY` |
 | 3    | Compute indicators           | (local code)           |

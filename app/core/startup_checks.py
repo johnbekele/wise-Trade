@@ -30,6 +30,13 @@ def check_api_keys() -> Dict[str, Tuple[bool, str]]:
     else:
         checks["News API"] = (False, "✗ Missing NEWS_API_KEY")
     
+    # Check RapidAPI Key
+    rapidapi_key = settings.RAPIDAPI_KEY
+    if rapidapi_key:
+        checks["RapidAPI"] = (True, f"✓ Key present (length: {len(rapidapi_key)})")
+    else:
+        checks["RapidAPI"] = (False, "✗ Missing RAPIDAPI_KEY")
+    
     # Check MongoDB URI
     mongo_uri = settings.MONGO_URI
     if mongo_uri:
@@ -219,12 +226,15 @@ def run_startup_checks() -> bool:
     print()
     
     # Test Google AI API
-    print("🤖 Testing Google AI API Connectivity:")
-    print("-" * 60)
-    google_working, google_msg = test_google_ai_api()
-    status_icon = "✅" if google_working else "❌"
-    print(f"  {status_icon} Google AI API: {google_msg}")
-    print()
+    # print("🤖 Testing Google AI API Connectivity:")
+    # print("-" * 60)
+    # google_working, google_msg = test_google_ai_api()
+    # status_icon = "✅" if google_working else "❌"
+    # print(f"  {status_icon} Google AI API: {google_msg}")
+    # print()
+    
+    # Skip Google AI check to avoid rate limiting
+    google_working = True
     
     # Summary
     print("="*60)

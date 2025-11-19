@@ -165,7 +165,7 @@ Please provide:
         except Exception as e:
             return f"Error during LLM analysis: {str(e)[:200]}"
     
-    def find_market_impact_news(self, limit: int = 10) -> str:
+    def find_market_impact_news(self, limit: int = 10) -> dict:
         """
         Find the most impactful financial news that could affect stock markets
         
@@ -173,7 +173,7 @@ Please provide:
             limit: Maximum number of news items to analyze
         
         Returns:
-            Analysis of top market-impacting news
+            Dict with structured analysis of top market-impacting news
         """
         # Fetch top financial headlines directly instead of searching with a query
         news_result = self.news_service.fetch_top_headlines(
@@ -193,45 +193,82 @@ Please provide:
             articles = news_result.get("articles", [])
         
         if not articles:
-            return "No news articles found. Please check your News API connection and API key."
+            return {
+                "success": False,
+                "message": "No news articles found. Please check your News API connection and API key.",
+                "news_items": []
+            }
         
         # Prepare news summary
         news_summary = "\n\n".join([
+            f"Article {i+1}:\n"
             f"Title: {art.get('title', 'N/A')}\n"
             f"Description: {art.get('description', 'N/A')}\n"
             f"Source: {art.get('source', {}).get('name', 'N/A')}\n"
             f"Published: {art.get('publishedAt', 'N/A')}"
-            for art in articles[:limit * 2]
+            for i, art in enumerate(articles[:limit * 2])
         ])
         
         # Use LLM to analyze and identify most impactful news
         # Use Google AI SDK directly to avoid max_retries compatibility issues with LangChain
         prompt = f"""Analyze the following financial news articles and identify the top {limit} most impactful items that could significantly affect stock markets.
 
-Focus on:
-- Breaking news and major announcements
-- Earnings reports and financial results
-- Economic indicators and policy changes
-- Company-specific news (mergers, product launches, regulatory changes)
-- Sector-wide trends
-
 News Articles:
 {news_summary}
 
-Please provide:
-1. Top {limit} most impactful news items ranked by potential market impact
-2. For each item: explain why it matters and potential market impact (high/medium/low)
-3. Which companies or sectors are most affected
-4. Potential price impact direction (positive/negative/neutral)
-5. Actionable insights for traders
+IMPORTANT: You must respond with ONLY a valid JSON object in this exact format (no markdown, no explanation):
+{{
+  "news_items": [
+    {{
+      "rank": 1,
+      "title": "News headline or summary",
+      "impact_level": "high|medium|low",
+      "impact_direction": "positive|negative|neutral",
+      "why_it_matters": "Brief explanation of why this news is important",
+      "affected_sectors": ["sector1", "sector2"],
+      "affected_companies": ["company1", "company2"],
+      "trading_insight": "Actionable insight for traders",
+      "source": "news source name"
+    }}
+  ]
+}}
 
-Format your response clearly with numbered items."""
+Ensure you return exactly {limit} news items, properly formatted as valid JSON."""
         
         # Use Google AI SDK directly
         try:
-            return self.genai_instance.generate_content_direct(prompt, temperature=0.7)
+            response_text = self.genai_instance.generate_content_direct(prompt, temperature=0.7)
+            
+            # Try to parse the JSON response
+            import json
+            import re
+            
+            # Remove markdown code blocks if present
+            response_text = re.sub(r'```json\s*|\s*```', '', response_text)
+            response_text = response_text.strip()
+            
+            # Parse JSON
+            try:
+                parsed_data = json.loads(response_text)
+                return {
+                    "success": True,
+                    "news_items": parsed_data.get("news_items", [])
+                }
+            except json.JSONDecodeError:
+                # Fallback: return raw text if JSON parsing fails
+                return {
+                    "success": False,
+                    "message": "AI response was not in expected JSON format",
+                    "raw_response": response_text,
+                    "news_items": []
+                }
+                
         except Exception as e:
-            return f"Error during LLM analysis: {str(e)[:200]}"
+            return {
+                "success": False,
+                "message": f"Error during LLM analysis: {str(e)[:200]}",
+                "news_items": []
+            }
 
 
 # Create a global agent instance

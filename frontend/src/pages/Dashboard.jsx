@@ -1,62 +1,27 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import StockCard from '../components/StockCard';
 import StockSearch from '../components/StockSearch';
-import { stockAPI } from '../services/api';
+import { useWatchlist, useMarketMovers } from '../hooks/useStocks';
 import { TrendingUp, TrendingDown, Activity, RefreshCw } from 'lucide-react';
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const [watchlist, setWatchlist] = useState(['AAPL', 'GOOGL', 'MSFT', 'TSLA', 'AMZN']);
-  const [stockData, setStockData] = useState({});
-  const [marketMovers, setMarketMovers] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
 
-  const fetchStockData = async () => {
-    setLoading(true);
-    try {
-      const promises = watchlist.map(symbol => 
-        stockAPI.getQuote(symbol).catch(err => ({ symbol, error: err.message }))
-      );
-      const results = await Promise.all(promises);
-      
-      const dataMap = {};
-      results.forEach((result, index) => {
-        if (!result.error) {
-          dataMap[watchlist[index]] = result;
-        }
-      });
-      
-      setStockData(dataMap);
-    } catch (error) {
-      console.error('Error fetching stock data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Use React Query hooks
+  const { 
+    data: stockData = [], 
+    isLoading, 
+    isError,
+    refetch: refetchStocks 
+  } = useWatchlist(watchlist);
 
-  const fetchMarketMovers = async () => {
-    try {
-      const data = await stockAPI.getMarketMovers();
-      setMarketMovers(data);
-    } catch (error) {
-      console.error('Error fetching market movers:', error);
-    }
-  };
-
-  useEffect(() => {
-    fetchStockData();
-    fetchMarketMovers();
-    
-    // Refresh data every 30 seconds
-    const interval = setInterval(() => {
-      setRefreshing(true);
-      fetchStockData().finally(() => setRefreshing(false));
-    }, 30000);
-    
-    return () => clearInterval(interval);
-  }, [watchlist]);
+  const {
+    data: marketMovers,
+    isLoading: loadingMovers,
+    refetch: refetchMovers
+  } = useMarketMovers();
 
   const handleAddStock = (symbol) => {
     if (!watchlist.includes(symbol)) {
@@ -69,10 +34,17 @@ export default function Dashboard() {
   };
 
   const handleRefresh = () => {
-    setRefreshing(true);
-    Promise.all([fetchStockData(), fetchMarketMovers()])
-      .finally(() => setRefreshing(false));
+    refetchStocks();
+    refetchMovers();
   };
+
+  // Convert array to object for easier lookup
+  const stockDataMap = {};
+  stockData.forEach((item, index) => {
+    if (!item.error) {
+      stockDataMap[watchlist[index]] = item;
+    }
+  });
 
   return (
     <div className="space-y-6">
@@ -84,10 +56,10 @@ export default function Dashboard() {
         </div>
         <button 
           onClick={handleRefresh}
-          disabled={refreshing}
+          disabled={isLoading || loadingMovers}
           className="btn btn-primary flex items-center gap-2"
         >
-          <RefreshCw className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
           Refresh
         </button>
       </div>
@@ -163,10 +135,17 @@ export default function Dashboard() {
       {/* Watchlist */}
       <div>
         <h2 className="text-2xl font-bold mb-4">Your Watchlist</h2>
-        {loading ? (
+        {isLoading ? (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
             <p className="mt-4 text-gray-500">Loading stocks...</p>
+          </div>
+        ) : isError ? (
+          <div className="card bg-red-50 border-red-200 text-center py-12">
+            <p className="text-red-700 font-medium">Error loading stocks</p>
+            <button onClick={refetchStocks} className="btn btn-primary mt-4">
+              Try Again
+            </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -182,7 +161,7 @@ export default function Dashboard() {
                 </button>
                 <StockCard
                   symbol={symbol}
-                  data={stockData[symbol]}
+                  data={stockDataMap[symbol]}
                   onClick={() => navigate(`/stock/${symbol}`)}
                 />
               </div>
@@ -190,7 +169,7 @@ export default function Dashboard() {
           </div>
         )}
         
-        {watchlist.length === 0 && !loading && (
+        {watchlist.length === 0 && !isLoading && (
           <div className="card text-center py-12">
             <p className="text-gray-500">No stocks in watchlist. Add some using the search above!</p>
           </div>
@@ -199,4 +178,3 @@ export default function Dashboard() {
     </div>
   );
 }
-

@@ -44,13 +44,33 @@ class UserService():
 
         #send verification email 
         email_service = EmailService()
-        verification_link = f"{settings.FRONTEND_URL}/api/auth/verify-email?token={verification_token}"
+        
+        # Explicit debugging
+        print("=" * 80)
+        print("🔍 EMAIL VERIFICATION LINK GENERATION DEBUG")
+        print("=" * 80)
+        print(f"1. settings.FRONTEND_URL = {repr(settings.FRONTEND_URL)}")
+        
+        frontend_url = settings.FRONTEND_URL or "http://localhost:3002"
+        print(f"2. frontend_url (after fallback) = {repr(frontend_url)}")
+        
+        verification_link = f"{frontend_url}/verify-email?token={verification_token}"
+        print(f"3. Final verification_link = {repr(verification_link)}")
+        print("=" * 80)
+        
         body = email_service.get_template("email_verification")
         body = body.replace("[Verification Link]", verification_link)
         body = body.replace("[User Name]", user_data.username)
+        
+        # Check what's actually in the body
+        import re
+        links = re.findall(r'href="([^"]+)"', body)
+        print(f"4. Links found in email body: {links}")
+        print("=" * 80)
+        
         await email_service.send_email(
             to_email=user_data.email,
-            subject="Email Verification - Resent",
+            subject="Email Verification - Wise Trade",
             body=body,
         )
         # user is already a UserRead object from the repository

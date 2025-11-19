@@ -89,13 +89,15 @@ class AuthService:
             await self.auth_repository.create_token(verification_token, user_id, "email_verification")
             
             # Send verification email
-            frontend_url = settings.FRONTEND_URL or "http://localhost:3000"
-            verification_link = f"{frontend_url}/api/auth/verify-email?token={verification_token}"
+            frontend_url = settings.FRONTEND_URL or "http://localhost:3002"
+            verification_link = f"{frontend_url}/verify-email?token={verification_token}"
             body = self.email_serveice.get_template("email_verification")
             body = body.replace("[Verification Link]", verification_link)
             body = body.replace("[User Name]", user.username)
             
-            await self.email_serveice.send_email(user.email, "Email Verification", body)
+            print(f"🔗 Verification link being sent: {verification_link}")  # Debug log
+            
+            await self.email_serveice.send_email(user.email, "Email Verification - Wise Trade", body)
             return "Verification email sent successfully"
             
         except Exception as e:

@@ -53,14 +53,11 @@ async def analyze_news_post(request: NewsAnalysisRequest):
         raise HTTPException(status_code=500, detail=f"Error analyzing news: {str(e)}")
 
 
-@router.get("/market-impact", response_model=NewsAnalysisResponse)
+@router.get("/market-impact")
 async def get_market_impact_news(limit: int = 10):
     """Get the most impactful financial news affecting stock markets"""
     try:
-        analysis = agent.find_market_impact_news(limit=limit)
-        return NewsAnalysisResponse(
-            analysis=analysis,
-            query=f"Top {limit} market-impacting news"
-        )
+        result = agent.find_market_impact_news(limit=limit)
+        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching market impact news: {str(e)}")

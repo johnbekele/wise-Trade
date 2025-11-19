@@ -40,13 +40,14 @@ class Config:
     NEWS_API_KEY=os.getenv("NEWS_API_KEY")
     NEWS_API_URL=os.getenv("NEWS_API_URL")
 
-    # Alpha Vantage API configuration
-    ALPHA_VANTAGE_API_KEY=os.getenv("ALPHA_VANTAGE_API_KEY")
-    ALPHA_VANTAGE_API_URL=os.getenv("ALPHA_VANTAGE_API_URL", "https://www.alphavantage.co/query")
+    # RapidAPI Yahoo Finance configuration
+    RAPIDAPI_KEY=os.getenv("RAPIDAPI_KEY") or "c23bff2951mshcf9ee63eae1e7d6p1f971ejsnb53b7c2a2081"
+    RAPIDAPI_HOST=os.getenv("RAPIDAPI_HOST", "yahoo-finance174.p.rapidapi.com")
+    RAPIDAPI_URL=os.getenv("RAPIDAPI_URL", "https://yahoo-finance174.p.rapidapi.com")
 
     # AI API configuration
     GEMINI_API_KEY=os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
-    GEMINI_MODEL=os.getenv("GEMINI_MODEL", "gemini-pro")
+    GEMINI_MODEL=os.getenv("GEMINI_MODEL", "gemini-2.0-flash-exp")
     
 
 
