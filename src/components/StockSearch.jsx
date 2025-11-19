@@ -1,4 +1,4 @@
-import { Search, X } from 'lucide-react';
+import { Search, X, TrendingUp } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { stockAPI } from '../services/api';
 
@@ -11,6 +11,7 @@ export default function StockSearch({ onSelect }) {
   useEffect(() => {
     if (query.length < 2) {
       setResults([]);
+      setShowResults(false);
       return;
     }
 
@@ -18,7 +19,9 @@ export default function StockSearch({ onSelect }) {
       setLoading(true);
       try {
         const data = await stockAPI.searchSymbol(query);
-        setResults(data.results?.bestMatches || []);
+        // Handle both old format (bestMatches) and new format (results array)
+        const searchResults = data.results || data.quotes || [];
+        setResults(searchResults);
         setShowResults(true);
       } catch (error) {
         console.error('Search error:', error);
@@ -46,7 +49,7 @@ export default function StockSearch({ onSelect }) {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search stocks (e.g., AAPL, TSLA)..."
+          placeholder="Search by company name or symbol (e.g., Apple, AAPL, Tesla)..."
           className="input pl-10 pr-10"
         />
         {query && (
@@ -63,29 +66,53 @@ export default function StockSearch({ onSelect }) {
         )}
       </div>
 
-      {showResults && results.length > 0 && (
+      {showResults && (
         <div className="absolute z-10 w-full mt-2 bg-white rounded-lg shadow-lg border border-gray-200 max-h-96 overflow-y-auto">
           {loading ? (
-            <div className="p-4 text-center text-gray-500">Searching...</div>
-          ) : (
-            <div className="py-2">
-              {results.map((result, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleSelect(result['1. symbol'])}
-                  className="w-full px-4 py-3 hover:bg-gray-50 text-left transition-colors"
-                >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="font-medium text-gray-900">{result['1. symbol']}</p>
-                      <p className="text-sm text-gray-600">{result['2. name']}</p>
-                    </div>
-                    <span className="text-xs text-gray-500">{result['4. region']}</span>
-                  </div>
-                </button>
-              ))}
+            <div className="p-4 text-center text-gray-500">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto mb-2"></div>
+              Searching...
             </div>
-          )}
+          ) : results.length > 0 ? (
+            <div className="py-2">
+              {results.map((result, index) => {
+                // Support multiple data formats
+                const symbol = result.symbol || result['1. symbol'];
+                const name = result.longname || result.shortname || result['2. name'] || symbol;
+                const type = result.quoteType || result['3. type'] || 'EQUITY';
+                const region = result.exchDisp || result['4. region'] || 'US';
+                
+                return (
+                  <button
+                    key={index}
+                    onClick={() => handleSelect(symbol)}
+                    className="w-full px-4 py-3 hover:bg-blue-50 text-left transition-colors border-b border-gray-100 last:border-0"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="font-bold text-gray-900 text-lg">{symbol}</p>
+                          <span className="px-2 py-0.5 text-xs bg-blue-100 text-blue-700 rounded-full">
+                            {type}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-600 mt-1">{name}</p>
+                      </div>
+                      <div className="flex items-center gap-2 ml-4">
+                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">{region}</span>
+                        <TrendingUp className="w-4 h-4 text-green-500" />
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          ) : query.length >= 2 ? (
+            <div className="p-4 text-center text-gray-500">
+              <p className="font-medium">No results found</p>
+              <p className="text-sm mt-1">Try searching for: Apple, Tesla, Microsoft, or stock symbols like AAPL, TSLA</p>
+            </div>
+          ) : null}
         </div>
       )}
     </div>

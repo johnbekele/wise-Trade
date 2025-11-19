@@ -1,5 +1,6 @@
 import { TrendingUp, TrendingDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { getLogoProps } from '../utils/helpers';
 
 export default function StockCard({ symbol, data, onClick }) {
   const quote = data?.data?.['Global Quote'] || {};
@@ -14,9 +15,18 @@ export default function StockCard({ symbol, data, onClick }) {
       className="card hover:shadow-lg transition-shadow cursor-pointer"
     >
       <div className="flex items-start justify-between mb-4">
-        <div>
-          <h3 className="text-xl font-bold text-gray-900">{symbol}</h3>
-          <p className="text-sm text-gray-500">{quote['01. symbol']}</p>
+        <div className="flex items-center gap-3">
+          {/* Company Logo */}
+          <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-200">
+            <img 
+              {...getLogoProps(symbol)}
+              className="w-full h-full object-contain p-1"
+            />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-gray-900">{symbol}</h3>
+            <p className="text-sm text-gray-500">{quote['01. symbol']}</p>
+          </div>
         </div>
         <div className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium
           ${isPositive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}
