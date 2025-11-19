@@ -41,7 +41,7 @@ class Config:
     NEWS_API_URL=os.getenv("NEWS_API_URL")
 
     # RapidAPI Yahoo Finance configuration
-    RAPIDAPI_KEY=os.getenv("RAPIDAPI_KEY") or "c23bff2951mshcf9ee63eae1e7d6p1f971ejsnb53b7c2a2081"
+    RAPIDAPI_KEY=os.getenv("RAPIDAPI_KEY")
     RAPIDAPI_HOST=os.getenv("RAPIDAPI_HOST", "yahoo-finance174.p.rapidapi.com")
     RAPIDAPI_URL=os.getenv("RAPIDAPI_URL", "https://yahoo-finance174.p.rapidapi.com")
 
