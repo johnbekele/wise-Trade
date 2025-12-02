@@ -23,7 +23,7 @@ async def init_database():
     """Initialize Beanie"""
     print("Initializing Beanie...")
     global client
-        try:
+    try:
             # Try with SSL configuration first
             # Increased timeouts for cloud environments (30 seconds)
             # Added connection pooling for better performance
