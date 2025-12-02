@@ -3,7 +3,7 @@ from typing import Optional, List
 from app.schemas.user_schema import UserCreate, UserRead, UserUpdate
 from app.repositories.users_repository import UsersRepository
 from datetime import datetime
-from fastapi import HTTPException
+from fastapi import HTTPException, BackgroundTasks
 from app.core.security import security_manager
 from app.repositories.auth_repository import AuthRepository
 from app.services.email_service import EmailService
@@ -19,7 +19,7 @@ class UserService():
         self.email_service = EmailService()
         self.auth_service = AuthService()
 
-    async def create_user(self, user_data: UserCreate)-> Optional[UserRead]:
+    async def create_user(self, user_data: UserCreate, background_tasks=None)-> Optional[UserRead]:
         exisiting_user = await self.users_repository.find_by_email(user_data.email)
         username_exists = await self.users_repository.find_by_username(user_data.username)
 
@@ -42,37 +42,57 @@ class UserService():
         print("verification token created successfully")
         
 
-        #send verification email 
-        email_service = EmailService()
-        
-        # Explicit debugging
-        print("=" * 80)
-        print("🔍 EMAIL VERIFICATION LINK GENERATION DEBUG")
-        print("=" * 80)
-        print(f"1. settings.FRONTEND_URL = {repr(settings.FRONTEND_URL)}")
-        
-        frontend_url = settings.FRONTEND_URL or "http://localhost:3002"
-        print(f"2. frontend_url (after fallback) = {repr(frontend_url)}")
-        
-        verification_link = f"{frontend_url}/verify-email?token={verification_token}"
-        print(f"3. Final verification_link = {repr(verification_link)}")
-        print("=" * 80)
-        
-        body = email_service.get_template("email_verification")
-        body = body.replace("[Verification Link]", verification_link)
-        body = body.replace("[User Name]", user_data.username)
-        
-        # Check what's actually in the body
-        import re
-        links = re.findall(r'href="([^"]+)"', body)
-        print(f"4. Links found in email body: {links}")
-        print("=" * 80)
-        
-        await email_service.send_email(
-            to_email=user_data.email,
-            subject="Email Verification - Wise Trade",
-            body=body,
-        )
+        # Prepare verification email (will be sent in background)
+        # Don't await email sending - return user immediately for better performance
+        try:
+            email_service = EmailService()
+            
+            # Explicit debugging
+            print("=" * 80)
+            print("🔍 EMAIL VERIFICATION LINK GENERATION DEBUG")
+            print("=" * 80)
+            print(f"1. settings.FRONTEND_URL = {repr(settings.FRONTEND_URL)}")
+            
+            frontend_url = settings.FRONTEND_URL or "http://localhost:3002"
+            print(f"2. frontend_url (after fallback) = {repr(frontend_url)}")
+            
+            verification_link = f"{frontend_url}/verify-email?token={verification_token}"
+            print(f"3. Final verification_link = {repr(verification_link)}")
+            print("=" * 80)
+            
+            body = email_service.get_template("email_verification")
+            body = body.replace("[Verification Link]", verification_link)
+            body = body.replace("[User Name]", user_data.username)
+            
+            # Check what's actually in the body
+            import re
+            links = re.findall(r'href="([^"]+)"', body)
+            print(f"4. Links found in email body: {links}")
+            print("=" * 80)
+            
+            # Send email in background without blocking the response
+            if background_tasks:
+                # Use FastAPI BackgroundTasks for proper task management
+                background_tasks.add_task(
+                    email_service.send_email,
+                    to_email=user_data.email,
+                    subject="Email Verification - Wise Trade",
+                    body=body,
+                )
+                print("📧 Email sending queued in background (non-blocking)")
+            else:
+                # Fallback: use asyncio.create_task if BackgroundTasks not available
+                import asyncio
+                asyncio.create_task(email_service.send_email(
+                    to_email=user_data.email,
+                    subject="Email Verification - Wise Trade",
+                    body=body,
+                ))
+                print("📧 Email sending task created (non-blocking)")
+        except Exception as e:
+            # Don't fail user creation if email fails
+            print(f"⚠️ Warning: Failed to queue email: {e}")
+            print("User created successfully, but email verification may need to be resent")
         # user is already a UserRead object from the repository
         return user
     async def get_all_users(self)-> List[UserRead]:

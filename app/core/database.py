@@ -23,31 +23,45 @@ async def init_database():
     """Initialize Beanie"""
     print("Initializing Beanie...")
     global client
-    try:
-        # Try with SSL configuration first
         try:
-            client = AsyncIOMotorClient(
-                MONGO_URI, 
-                tlsCAFile=certifi.where(),
-                tlsAllowInvalidCertificates=True,
-                tlsAllowInvalidHostnames=True,
-                serverSelectionTimeoutMS=5000,
-                connectTimeoutMS=5000
-            )
-            database = client[MONGO_DATABASE]
-            print("MongoDB client initialized successfully 🍃 MongoDB URI: ", MONGO_URI)
-        except Exception as ssl_error:
-            print(f"SSL connection failed, trying alternative method: {ssl_error}")
-            # Fallback: try without SSL verification
-            client = AsyncIOMotorClient(
-                MONGO_URI,
-                tlsAllowInvalidCertificates=True,
-                tlsAllowInvalidHostnames=True,
-                serverSelectionTimeoutMS=10000,
-                connectTimeoutMS=10000
-            )
-            database = client[MONGO_DATABASE]
-            print("MongoDB client initialized with fallback method 🍃 MongoDB URI: ", MONGO_URI)
+            # Try with SSL configuration first
+            # Increased timeouts for cloud environments (30 seconds)
+            # Added connection pooling for better performance
+            try:
+                client = AsyncIOMotorClient(
+                    MONGO_URI, 
+                    tlsCAFile=certifi.where(),
+                    tlsAllowInvalidCertificates=True,
+                    tlsAllowInvalidHostnames=True,
+                    serverSelectionTimeoutMS=30000,  # 30 seconds for cloud
+                    connectTimeoutMS=30000,  # 30 seconds for cloud
+                    socketTimeoutMS=30000,  # 30 seconds socket timeout
+                    maxPoolSize=50,  # Connection pool size
+                    minPoolSize=10,  # Minimum connections
+                    maxIdleTimeMS=45000,  # Close idle connections after 45s
+                    retryWrites=True,  # Retry writes on network errors
+                    retryReads=True,  # Retry reads on network errors
+                )
+                database = client[MONGO_DATABASE]
+                print("MongoDB client initialized successfully 🍃 MongoDB URI: ", MONGO_URI)
+            except Exception as ssl_error:
+                print(f"SSL connection failed, trying alternative method: {ssl_error}")
+                # Fallback: try without SSL verification with cloud-optimized settings
+                client = AsyncIOMotorClient(
+                    MONGO_URI,
+                    tlsAllowInvalidCertificates=True,
+                    tlsAllowInvalidHostnames=True,
+                    serverSelectionTimeoutMS=30000,  # 30 seconds for cloud
+                    connectTimeoutMS=30000,  # 30 seconds for cloud
+                    socketTimeoutMS=30000,  # 30 seconds socket timeout
+                    maxPoolSize=50,  # Connection pool size
+                    minPoolSize=10,  # Minimum connections
+                    maxIdleTimeMS=45000,  # Close idle connections after 45s
+                    retryWrites=True,  # Retry writes on network errors
+                    retryReads=True,  # Retry reads on network errors
+                )
+                database = client[MONGO_DATABASE]
+                print("MongoDB client initialized with fallback method 🍃 MongoDB URI: ", MONGO_URI)
     except Exception as e:
         print("Error initializing MongoDB client: ", e)
         raise e

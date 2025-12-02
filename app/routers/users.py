@@ -1,4 +1,4 @@
-from fastapi import APIRouter , Depends
+from fastapi import APIRouter , Depends, BackgroundTasks
 from app.services.users_service import UserService
 from app.schemas.user_schema import UserCreate, UserRead, UserUpdate
 from typing import List
@@ -11,9 +11,10 @@ def get_user_service() -> UserService:
 @router.post("/signup", response_model=UserRead)
 async def create_user(
     user_data: UserCreate,
+    background_tasks: BackgroundTasks,
     user_service: UserService = Depends(get_user_service)
 ) -> UserRead:
-    return await user_service.create_user(user_data)
+    return await user_service.create_user(user_data, background_tasks)
 
 
 @router.post("/get-user/{user_id}", response_model=UserRead)

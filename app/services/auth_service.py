@@ -1,4 +1,4 @@
-from fastapi import HTTPException
+from fastapi import HTTPException, BackgroundTasks
 from app.repositories.auth_repository import AuthRepository
 from app.schemas.auth_schema import AuthTokenRead  ,TokenPayload ,LoginResponse
 from app.core.security import security_manager
@@ -14,7 +14,7 @@ class AuthService:
         self.auth_repository = AuthRepository()
         self.security_manager = security_manager
         self.users_repository = UsersRepository()
-        self.email_serveice=EmailService()
+        self.email_service = EmailService()
 
     async def create_token(self, token: str, payload: dict, token_type: str):
 
@@ -32,20 +32,7 @@ class AuthService:
         return token
 
 
-    async def verify_email(self, token: str)->Optional[str]:
-        token_data = await self.auth_repository.find_by_token(token)
-        if token_data:
-            decoded_token =await self.security_manager.verify_token(token)
-            if decoded_token:
-                user_id = decoded_token.get("sub")
-                if user_id:
-                    user = await self.users_repository.find_by_id(user_id)
-                    if user:
-                        user.is_verified = True
-                        user.is_active = True
-                        await self.users_repository.update_user(user_id, user)
-                        return user
-        return None
+    # Removed duplicate verify_email method - using the one below with better error handling
 
 
 
@@ -78,7 +65,7 @@ class AuthService:
 
         return LoginResponse( token=access_token, token_type="bearer", user=payload)
 
-    async def send_email_verification(self, user_id: str)->str:
+    async def send_email_verification(self, user_id: str, background_tasks=None)->str:
         try:
             user = await self.users_repository.get_user_by_id(user_id)
             if not user:
@@ -91,14 +78,25 @@ class AuthService:
             # Send verification email
             frontend_url = settings.FRONTEND_URL or "http://localhost:3002"
             verification_link = f"{frontend_url}/verify-email?token={verification_token}"
-            body = self.email_serveice.get_template("email_verification")
+            body = self.email_service.get_template("email_verification")
             body = body.replace("[Verification Link]", verification_link)
             body = body.replace("[User Name]", user.username)
             
             print(f"🔗 Verification link being sent: {verification_link}")  # Debug log
             
-            await self.email_serveice.send_email(user.email, "Email Verification - Wise Trade", body)
-            return "Verification email sent successfully"
+            # Send email in background to avoid blocking
+            if background_tasks:
+                background_tasks.add_task(
+                    self.email_service.send_email,
+                    to_email=user.email,
+                    subject="Email Verification - Wise Trade",
+                    body=body,
+                )
+                return "Verification email queued successfully"
+            else:
+                # Fallback: send synchronously if BackgroundTasks not available
+                await self.email_service.send_email(user.email, "Email Verification - Wise Trade", body)
+                return "Verification email sent successfully"
             
         except Exception as e:
             print(f"Error in send_email_verification: {e}")
@@ -108,29 +106,45 @@ class AuthService:
     
 
     async def verify_email(self, token: str) -> Optional[str]:
+        """Verify email with improved error handling and token validation"""
         try:
+            if not token:
+                return "Token is required"
+            
+            # First verify the JWT token structure
+            user_id = self.security_manager.verify_token(token)
+            if not user_id:
+                return "Invalid or expired token"
+            
+            # Check if token exists in database
             token_data = await self.auth_repository.find_by_token(token)
-            if token_data:
-                if token_data.token_type == "email_verification":
-                    # Verify the token and get the user_id
-                    user_id = self.security_manager.verify_token(token)
-                    if user_id:
-                        # Get the user document using the repository
-                        user_doc = await self.users_repository.find_by_id(user_id)
-                        if user_doc:
-                            # Update the user document directly
-                            user_doc.is_verified = True
-                            user_doc.is_active = True
-                            await user_doc.save()
-                            return "Email verified successfully"
-                        else:
-                            return "User not found"
-                    else:
-                        return "Invalid token"
-                else:
-                    return "Invalid token type"
-            else:
-                return "Token not found"
+            if not token_data:
+                return "Token not found in database"
+            
+            if token_data.token_type != "email_verification":
+                return "Invalid token type"
+            
+            # Get the user document
+            user_doc = await self.users_repository.find_by_id(user_id)
+            if not user_doc:
+                return "User not found"
+            
+            # Check if already verified
+            if user_doc.is_verified:
+                return "Email already verified"
+            
+            # Update the user document
+            user_doc.is_verified = True
+            user_doc.is_active = True
+            await user_doc.save()
+            
+            # Optionally delete the verification token after successful verification
+            try:
+                await self.auth_repository.delete_token(token)
+            except:
+                pass  # Don't fail if token deletion fails
+            
+            return "Email verified successfully"
         except Exception as e:
             print(f"Error in verify_email: {e}")
             import traceback
