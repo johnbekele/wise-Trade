@@ -47,3 +47,24 @@ class UserProfile(BaseModel):
 
 class EmailVerificationResponse(BaseModel):
     message: str
+
+class GoogleAuthResponse(BaseModel):
+    """Response after successful Google OAuth"""
+    message: str
+    user_id: str
+    email: str
+    access_token: str
+    token_type: Literal["bearer"] = "bearer"
+
+class PasswordResetRequest(BaseModel):
+    """Request password reset by email"""
+    email: EmailStr
+
+class PasswordResetConfirm(BaseModel):
+    """Confirm password reset with token"""
+    token: str
+    new_password: str
+
+class ResendVerificationRequest(BaseModel):
+    """Resend verification code by email"""
+    email: EmailStr

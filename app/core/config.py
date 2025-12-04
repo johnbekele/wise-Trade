@@ -53,6 +53,12 @@ class Config:
     GEMINI_API_KEY=os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
     GEMINI_MODEL=os.getenv("GEMINI_MODEL", "gemini-2.0-flash-exp")
     
+    # Google OAuth2 configuration
+    GOOGLE_CLIENT_ID=os.getenv("GOOGLE_CLIENT_ID")
+    GOOGLE_CLIENT_SECRET=os.getenv("GOOGLE_CLIENT_SECRET")
+    GOOGLE_REDIRECT_URI=os.getenv("GOOGLE_REDIRECT_URI", "http://127.0.0.1:8001/api/auth/google/callback")
+    GOOGLE_AUTHORIZED_ORIGINS=os.getenv("GOOGLE_AUTHORIZED_ORIGINS", "http://127.0.0.1:8001,http://localhost:3000").split(",")
+    
 
 
 

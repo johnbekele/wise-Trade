@@ -11,6 +11,7 @@ class UserCreate(BaseModel):
     is_active: bool = False
     is_super_Admin: bool = False
     is_verified: bool = False
+    ai_access_blocked: bool = False
     created_at: datetime = datetime.now()
     updated_at: datetime = datetime.now()
     
@@ -21,11 +22,12 @@ class UserRead(BaseModel):
     username: str
     first_name: str
     last_name: str
-    hashed_password: str
+    hashed_password: Optional[str] = None
     email: EmailStr
     is_active: bool
     is_super_Admin: bool
     is_verified: bool
+    ai_access_blocked: bool = False
     created_at: datetime
     updated_at: datetime
     
@@ -39,6 +41,7 @@ class UserUpdate(BaseModel):
     is_active: Optional[bool] = None
     is_super_Admin: Optional[bool] = None
     is_verified: Optional[bool] = None
+    ai_access_blocked: Optional[bool] = None
 
 class UserDeleteResponse(BaseModel):
     message: str
