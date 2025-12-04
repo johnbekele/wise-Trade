@@ -13,10 +13,18 @@ class SecurityManager:
     def __init__(self):
         self.secret_key = settings.SECRET_KEY
         self.refresh_key = settings.REFRESH_SECRET_KEY
-        self.algorithm = settings.ALGORITHM
+        self.algorithm = settings.ALGORITHM or "HS256"  # Default to HS256 if None
         self.access_token_expire_minutes = settings.ACCESS_TOKEN_EXPIRE_MINUTES
         self.refresh_token_expire_days = settings.REFRESH_TOKEN_EXPIRE_DAYS
         self.pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+        
+        # Validate required settings
+        if not self.secret_key:
+            raise ValueError("SECRET_KEY is not set in environment variables")
+        if not self.refresh_key:
+            raise ValueError("REFRESH_SECRET_KEY is not set in environment variables")
+        if not self.algorithm:
+            raise ValueError("ALGORITHM is not set in environment variables")
 
     def verify_password(self, plain_password: str, hashed_password: str) -> bool:
         """Verify password against hash"""

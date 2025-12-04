@@ -49,13 +49,13 @@ class NewsService:
         try:
             # Try with SSL verification first
             try:
-                response = requests.get(url, params=params, timeout=10, verify=self.verify_ssl)
+                response = requests.get(url, params=params, timeout=5, verify=self.verify_ssl)
                 response.raise_for_status()
                 return response.json()
             except requests.exceptions.SSLError:
                 # If SSL verification fails, retry without verification (WSL/common issue)
                 self.verify_ssl = False
-                response = requests.get(url, params=params, timeout=10, verify=False)
+                response = requests.get(url, params=params, timeout=5, verify=False)
                 response.raise_for_status()
                 return response.json()
         except requests.exceptions.RequestException as e:
@@ -99,13 +99,13 @@ class NewsService:
         try:
             # Try with SSL verification first
             try:
-                response = requests.get(url, params=params, timeout=10, verify=self.verify_ssl)
+                response = requests.get(url, params=params, timeout=5, verify=self.verify_ssl)
                 response.raise_for_status()
                 return response.json()
             except requests.exceptions.SSLError:
                 # If SSL verification fails, retry without verification (WSL/common issue)
                 self.verify_ssl = False
-                response = requests.get(url, params=params, timeout=10, verify=False)
+                response = requests.get(url, params=params, timeout=5, verify=False)
                 response.raise_for_status()
                 return response.json()
         except requests.exceptions.RequestException as e:

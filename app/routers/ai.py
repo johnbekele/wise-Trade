@@ -1,6 +1,7 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, BackgroundTasks
 from pydantic import BaseModel
 from typing import Optional
+import asyncio
 from app.LLM.api_agent import agent
 
 router = APIRouter()
@@ -24,7 +25,9 @@ async def analyze_news_path(query: str):
     Usage: GET /api/ai/analyze-news/tesla
     """
     try:
-        analysis = agent.analyze_market_news(query)
+        # Run in thread pool to avoid blocking
+        loop = asyncio.get_event_loop()
+        analysis = await loop.run_in_executor(None, agent.analyze_market_news, query)
         return NewsAnalysisResponse(analysis=analysis, query=query)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error analyzing news: {str(e)}")
@@ -37,7 +40,9 @@ async def analyze_news_get(query: str):
     Usage: GET /api/ai/analyze-news?query=tesla
     """
     try:
-        analysis = agent.analyze_market_news(query)
+        # Run in thread pool to avoid blocking
+        loop = asyncio.get_event_loop()
+        analysis = await loop.run_in_executor(None, agent.analyze_market_news, query)
         return NewsAnalysisResponse(analysis=analysis, query=query)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error analyzing news: {str(e)}")
@@ -47,7 +52,9 @@ async def analyze_news_get(query: str):
 async def analyze_news_post(request: NewsAnalysisRequest):
     """Analyze financial news for market impact (POST with JSON body)"""
     try:
-        analysis = agent.analyze_market_news(request.query)
+        # Run in thread pool to avoid blocking
+        loop = asyncio.get_event_loop()
+        analysis = await loop.run_in_executor(None, agent.analyze_market_news, request.query)
         return NewsAnalysisResponse(analysis=analysis, query=request.query)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error analyzing news: {str(e)}")
@@ -57,7 +64,9 @@ async def analyze_news_post(request: NewsAnalysisRequest):
 async def get_market_impact_news(limit: int = 10):
     """Get the most impactful financial news affecting stock markets"""
     try:
-        result = agent.find_market_impact_news(limit=limit)
+        # Run in thread pool to avoid blocking
+        loop = asyncio.get_event_loop()
+        result = await loop.run_in_executor(None, agent.find_market_impact_news, limit)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching market impact news: {str(e)}")

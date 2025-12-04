@@ -25,7 +25,7 @@ class Config:
     # Secret key
     SECRET_KEY=os.getenv("SECRET_KEY")
     REFRESH_SECRET_KEY=os.getenv("REFRESH_SECRET_KEY")
-    ALGORITHM=os.getenv("ALGORITHM")
+    ALGORITHM=os.getenv("ALGORITHM", "HS256")  # Default to HS256 if not set
     ACCESS_TOKEN_EXPIRE_MINUTES=int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
     REFRESH_TOKEN_EXPIRE_DAYS=int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", 7))
     TOKEN_EXPIRE_DAYS=int(os.getenv("TOKEN_EXPIRE_DAYS", 1))
@@ -45,7 +45,11 @@ class Config:
     RAPIDAPI_HOST=os.getenv("RAPIDAPI_HOST", "yahoo-finance174.p.rapidapi.com")
     RAPIDAPI_URL=os.getenv("RAPIDAPI_URL", "https://yahoo-finance174.p.rapidapi.com")
 
-    # AI API configuration
+    # AI API configuration - Claude (Anthropic)
+    CLAUDE_API_KEY=os.getenv("CLAUDE_API_KEY") or os.getenv("ANTHROPIC_API_KEY")
+    CLAUDE_MODEL=os.getenv("CLAUDE_MODEL", "claude-3-5-sonnet-20241022")
+    
+    # Legacy Gemini support (deprecated)
     GEMINI_API_KEY=os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
     GEMINI_MODEL=os.getenv("GEMINI_MODEL", "gemini-2.0-flash-exp")
     
