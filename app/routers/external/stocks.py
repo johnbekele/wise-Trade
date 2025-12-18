@@ -1,7 +1,11 @@
+"""
+External API endpoints for stocks - API Key authentication only.
+These endpoints are for programmatic access by external users.
+"""
 from fastapi import APIRouter, HTTPException, Query, Depends
 from typing import List, Dict, Optional, Any
 from app.services.yahoo_finance_service import YahooFinanceService
-from app.core.jwt_auth import authenticate_jwt_only
+from app.core.api_key_only_auth import authenticate_api_key_only
 
 router = APIRouter()
 
@@ -10,13 +14,11 @@ def get_stock_service():
     return YahooFinanceService()
 
 @router.get("/quote/{symbol}")
-async def get_quote(symbol: str, auth: Dict[str, Any] = Depends(authenticate_jwt_only)):
-    """Get real-time quote for a stock symbol."""
+async def get_quote(symbol: str, auth: Dict[str, Any] = Depends(authenticate_api_key_only)):
+    """Get real-time quote for a stock symbol. API Key required."""
     stock_service = get_stock_service()
     data = stock_service.get_quote(symbol.upper())
     
-    # Service now returns mock data instead of errors when rate limited
-    # Transform Yahoo Finance data to consistent format
     return {
         "symbol": symbol.upper(),
         "data": {
@@ -41,11 +43,9 @@ async def get_candles(
     symbol: str,
     resolution: str = Query("1d", description="Candle resolution: 1m, 5m, 15m, 30m, 1h, 1d"),
     days: int = Query(30, description="Number of days to look back"),
-    auth: Dict[str, Any] = Depends(authenticate_jwt_only)
+    auth: Dict[str, Any] = Depends(authenticate_api_key_only)
 ):
-    """Get candlestick data for charts."""
-    # Yahoo Finance RapidAPI doesn't have a chart endpoint
-    # Return empty data for now - quotes work, but historical data isn't available in this API
+    """Get candlestick data for charts. API Key required."""
     return {
         "symbol": symbol.upper(),
         "data": {
@@ -55,15 +55,12 @@ async def get_candles(
 
 
 @router.get("/profile/{symbol}")
-async def get_profile(symbol: str, auth: Dict[str, Any] = Depends(authenticate_user_or_api_key)):
-    """Get company profile and information."""
+async def get_profile(symbol: str, auth: Dict[str, Any] = Depends(authenticate_api_key_only)):
+    """Get company profile and information. API Key required."""
     stock_service = get_stock_service()
-    # Yahoo Finance RapidAPI doesn't have a separate profile endpoint
-    # Get basic info from quote instead
     quote_data = stock_service.get_quote(symbol.upper())
     
     if "error" in quote_data:
-        # Return minimal profile data
         return {
             "symbol": symbol.upper(),
             "data": {
@@ -83,7 +80,6 @@ async def get_profile(symbol: str, auth: Dict[str, Any] = Depends(authenticate_u
             }
         }
     
-    # Use data from quote
     return {
         "symbol": symbol.upper(),
         "data": {
@@ -105,15 +101,14 @@ async def get_profile(symbol: str, auth: Dict[str, Any] = Depends(authenticate_u
 
 
 @router.get("/search")
-async def search_stocks(keywords: str = Query(..., min_length=1), auth: Dict[str, Any] = Depends(authenticate_user_or_api_key)):
-    """Search for stocks by symbol or company name."""
+async def search_stocks(keywords: str = Query(..., min_length=1), auth: Dict[str, Any] = Depends(authenticate_api_key_only)):
+    """Search for stocks by symbol or company name. API Key required."""
     stock_service = get_stock_service()
     data = stock_service.search_symbol(keywords)
     
     if "error" in data:
         raise HTTPException(status_code=500, detail=f"Error searching stocks: {data['error']}")
     
-    # Transform results
     results = []
     quotes = data.get("quotes", [])
     
@@ -129,15 +124,14 @@ async def search_stocks(keywords: str = Query(..., min_length=1), auth: Dict[str
 
 
 @router.get("/market-movers")
-async def get_market_movers(auth: Dict[str, Any] = Depends(authenticate_user_or_api_key)):
-    """Get top gainers, losers, and most active stocks."""
+async def get_market_movers(auth: Dict[str, Any] = Depends(authenticate_api_key_only)):
+    """Get top gainers, losers, and most active stocks. API Key required."""
     stock_service = get_stock_service()
     data = stock_service.get_market_movers()
     
     if "error" in data:
         raise HTTPException(status_code=500, detail=f"Error fetching market movers: {data['error']}")
     
-    # Transform to expected format
     def format_stock(stock):
         return {
             "ticker": stock.get("symbol", ""),
@@ -152,3 +146,4 @@ async def get_market_movers(auth: Dict[str, Any] = Depends(authenticate_user_or_
         "top_losers": [format_stock(s) for s in data.get("losers", [])],
         "most_actively_traded": [format_stock(s) for s in data.get("most_active", [])]
     }
+

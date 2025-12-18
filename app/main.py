@@ -16,6 +16,10 @@ from app.routers import stocks
 from app.routers import admin
 from app.routers import api_keys
 
+# External API routers (API key only)
+from app.routers.external import stocks as external_stocks
+from app.routers.external import ai as external_ai
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("Starting lifespan...")
@@ -53,6 +57,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Frontend API routes (JWT authentication only)
 app.include_router(test.router , tags=["test"] , prefix="/api/test")
 app.include_router(users.router , tags=["users"] , prefix="/api/users")
 app.include_router(auth.router , tags=["auth"] , prefix="/api/auth")
@@ -60,3 +65,7 @@ app.include_router(ai.router , tags=["ai"] , prefix="/api/ai")
 app.include_router(stocks.router , tags=["stocks"] , prefix="/api/stocks")
 app.include_router(admin.router , tags=["admin"] , prefix="/api/admin")
 app.include_router(api_keys.router , tags=["api-keys"] , prefix="/api/api-keys")
+
+# External API routes (API key authentication only)
+app.include_router(external_stocks.router , tags=["external-stocks"] , prefix="/api/v1/external/stocks")
+app.include_router(external_ai.router , tags=["external-ai"] , prefix="/api/v1/external/ai")
