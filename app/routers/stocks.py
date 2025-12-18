@@ -1,6 +1,7 @@
-from fastapi import APIRouter, HTTPException, Query
-from typing import List, Dict, Optional
+from fastapi import APIRouter, HTTPException, Query, Depends
+from typing import List, Dict, Optional, Any
 from app.services.yahoo_finance_service import YahooFinanceService
+from app.core.api_key_auth import authenticate_user_or_api_key
 
 router = APIRouter()
 
@@ -9,7 +10,7 @@ def get_stock_service():
     return YahooFinanceService()
 
 @router.get("/quote/{symbol}")
-async def get_quote(symbol: str):
+async def get_quote(symbol: str, auth: Dict[str, Any] = Depends(authenticate_user_or_api_key)):
     """Get real-time quote for a stock symbol."""
     stock_service = get_stock_service()
     data = stock_service.get_quote(symbol.upper())
@@ -39,7 +40,8 @@ async def get_quote(symbol: str):
 async def get_candles(
     symbol: str,
     resolution: str = Query("1d", description="Candle resolution: 1m, 5m, 15m, 30m, 1h, 1d"),
-    days: int = Query(30, description="Number of days to look back")
+    days: int = Query(30, description="Number of days to look back"),
+    auth: Dict[str, Any] = Depends(authenticate_user_or_api_key)
 ):
     """Get candlestick data for charts."""
     # Yahoo Finance RapidAPI doesn't have a chart endpoint
@@ -53,7 +55,7 @@ async def get_candles(
 
 
 @router.get("/profile/{symbol}")
-async def get_profile(symbol: str):
+async def get_profile(symbol: str, auth: Dict[str, Any] = Depends(authenticate_user_or_api_key)):
     """Get company profile and information."""
     stock_service = get_stock_service()
     # Yahoo Finance RapidAPI doesn't have a separate profile endpoint
@@ -103,7 +105,7 @@ async def get_profile(symbol: str):
 
 
 @router.get("/search")
-async def search_stocks(keywords: str = Query(..., min_length=1)):
+async def search_stocks(keywords: str = Query(..., min_length=1), auth: Dict[str, Any] = Depends(authenticate_user_or_api_key)):
     """Search for stocks by symbol or company name."""
     stock_service = get_stock_service()
     data = stock_service.search_symbol(keywords)
@@ -127,7 +129,7 @@ async def search_stocks(keywords: str = Query(..., min_length=1)):
 
 
 @router.get("/market-movers")
-async def get_market_movers():
+async def get_market_movers(auth: Dict[str, Any] = Depends(authenticate_user_or_api_key)):
     """Get top gainers, losers, and most active stocks."""
     stock_service = get_stock_service()
     data = stock_service.get_market_movers()

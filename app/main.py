@@ -14,6 +14,7 @@ from app.routers import auth
 from app.routers import ai
 from app.routers import stocks
 from app.routers import admin
+from app.routers import api_keys
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -58,3 +59,4 @@ app.include_router(auth.router , tags=["auth"] , prefix="/api/auth")
 app.include_router(ai.router , tags=["ai"] , prefix="/api/ai")
 app.include_router(stocks.router , tags=["stocks"] , prefix="/api/stocks")
 app.include_router(admin.router , tags=["admin"] , prefix="/api/admin")
+app.include_router(api_keys.router , tags=["api-keys"] , prefix="/api/api-keys")

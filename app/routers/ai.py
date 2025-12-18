@@ -1,48 +1,13 @@
 from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Dict, Any
 import asyncio
 from app.LLM.api_agent import agent
-from app.core.security import security_manager
-from app.repositories.users_repository import UsersRepository
+from app.core.api_key_auth import check_ai_access_with_api_key
 
 router = APIRouter()
 bearer_scheme = HTTPBearer(auto_error=False)
-
-
-def get_users_repository() -> UsersRepository:
-    return UsersRepository()
-
-
-async def check_ai_access(
-    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
-    users_repo: UsersRepository = Depends(get_users_repository)
-):
-    # Check if user has AI access
-    if not credentials:
-        return None
-    
-    token = credentials.credentials
-    result = security_manager.decode_token(token)
-    
-    if not result.get("success"):
-        return None
-    
-    payload = result.get("payload", {})
-    user_id = payload.get("sub")
-    
-    if not user_id:
-        return None
-    
-    user = await users_repo.find_by_id(user_id)
-    if not user:
-        return None
-    
-    if getattr(user, 'ai_access_blocked', False):
-        raise HTTPException(status_code=403, detail="Your AI access has been blocked. Please contact an administrator.")
-    
-    return user
 
 
 class NewsAnalysisRequest(BaseModel):
@@ -56,7 +21,7 @@ class NewsAnalysisResponse(BaseModel):
 
 
 @router.get("/analyze-news/{query}", response_model=NewsAnalysisResponse)
-async def analyze_news_path(query: str, user=Depends(check_ai_access)):
+async def analyze_news_path(query: str, auth: Dict[str, Any] = Depends(check_ai_access_with_api_key)):
     # Analyze news with path parameter
     try:
         loop = asyncio.get_event_loop()
@@ -69,7 +34,7 @@ async def analyze_news_path(query: str, user=Depends(check_ai_access)):
 
 
 @router.get("/analyze-news", response_model=NewsAnalysisResponse)
-async def analyze_news_get(query: str, user=Depends(check_ai_access)):
+async def analyze_news_get(query: str, auth: Dict[str, Any] = Depends(check_ai_access_with_api_key)):
     # Analyze news with query parameter
     try:
         loop = asyncio.get_event_loop()
@@ -82,7 +47,7 @@ async def analyze_news_get(query: str, user=Depends(check_ai_access)):
 
 
 @router.post("/analyze-news", response_model=NewsAnalysisResponse)
-async def analyze_news_post(request: NewsAnalysisRequest, user=Depends(check_ai_access)):
+async def analyze_news_post(request: NewsAnalysisRequest, auth: Dict[str, Any] = Depends(check_ai_access_with_api_key)):
     # Analyze news with JSON body
     try:
         loop = asyncio.get_event_loop()
@@ -95,7 +60,7 @@ async def analyze_news_post(request: NewsAnalysisRequest, user=Depends(check_ai_
 
 
 @router.get("/market-impact")
-async def get_market_impact_news(limit: int = 10, user=Depends(check_ai_access)):
+async def get_market_impact_news(limit: int = 10, auth: Dict[str, Any] = Depends(check_ai_access_with_api_key)):
     # Get market impact news
     try:
         loop = asyncio.get_event_loop()

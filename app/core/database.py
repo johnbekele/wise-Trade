@@ -6,6 +6,7 @@ import certifi
 #collection models
 from app.models.users import User
 from app.models.auth import AuthToken
+from app.models.api_key import ApiKey
 
 MONGO_URI = settings.MONGO_URI
 MONGO_DATABASE = settings.MONGO_DATABASE
@@ -93,7 +94,7 @@ async def init_database():
                 raise e
     
     try:
-        await init_beanie(database=database, document_models=[User , AuthToken], allow_index_dropping=False, recreate_views=False)
+        await init_beanie(database=database, document_models=[User , AuthToken, ApiKey], allow_index_dropping=False, recreate_views=False)
         print("Beanie initialized successfully 🍃")
     except Exception as e:
         print("Error initializing Beanie: ", e)
