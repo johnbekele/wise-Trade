@@ -17,7 +17,7 @@ Wise Trade is an intelligent trading platform that:
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
 │   Frontend      │    │   Backend API   │    │   AI/ML Engine  │
-│   (React)       │◄──►│   (Node.js)     │◄──►│   (Python/TF)   │
+│   (React)       │◄──►│   (Fast API)     │◄──►(Claude agent SDK│
 └─────────────────┘    └─────────────────┘    └─────────────────┘
                               │
                               ▼
